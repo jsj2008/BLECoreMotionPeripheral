@@ -10,11 +10,14 @@
 #import "CoreMotionService.h"
 
 @interface NSDPeripheralModelController () <CBPeripheralManagerDelegate>
+{
+    BOOL readyToUpdate;
+}
 @property (strong, nonatomic) CBMutableCharacteristic *matrixCharacteristic;
-@property (strong, nonatomic) CBMutableCharacteristic *rawCharacteristic;
 @property (strong, nonatomic) NSData *matrixToSend;
-@property (strong, nonatomic) NSData *rawToSend;
 @property (nonatomic, readwrite) NSInteger sendDataIndex;
+
+
 
 @end
 
@@ -25,11 +28,8 @@
 @implementation NSDPeripheralModelController
 @synthesize peripheralManager = _peripheralManager;
 @synthesize matrixCharacteristic = _matrixCharacteristic;
-@synthesize rawCharacteristic = _rawCharacteristic;
 @synthesize matrixToSend = _matrixToSend;
-@synthesize rawToSend = _rawToSend;
 @synthesize rotationMatrixData = _rotationMatrixData;
-@synthesize currentlySendingData = _currentlySendingData;
 
 - (id) init
 {
@@ -37,7 +37,7 @@
     {
         NSLog( @"INIT peripheral manager");
         self.peripheralManager = [[CBPeripheralManager alloc] initWithDelegate:self queue:nil];
-//        self.currentlySendingData = @NO;
+        readyToUpdate = YES;
     }
     
     return self;
@@ -55,8 +55,9 @@
 {
     NSLog( @"Beginning Advertisement" );
     
-    [self.peripheralManager startAdvertising:@{ CBAdvertisementDataServiceUUIDsKey : @[[CBUUID UUIDWithString:COREMOTION_SERVICE_UUID]], CBAdvertisementDataLocalNameKey : @"Peripheral" }];
+    [self.peripheralManager startAdvertising:@{ CBAdvertisementDataLocalNameKey : @"Core Bluetooth Motion Periph" }];
     
+    NSLog( @"Advertising is %d", self.peripheralManager.isAdvertising);
 }
 
 
@@ -72,20 +73,16 @@
     
     self.matrixCharacteristic = [[CBMutableCharacteristic alloc] initWithType:[CBUUID UUIDWithString:COREMOTION_CHARACTERISTIC_ROTATIONMATRIX_UUID] properties:CBCharacteristicPropertyNotify value:nil permissions:CBAttributePermissionsReadable];
     
-    //    self.rawCharacteristic = [[CBMutableCharacteristic alloc] initWithType:[CBUUID UUIDWithString:COREMOTION_CHARACTERISTIC_RAW_UUID] properties:CBCharacteristicPropertyNotify value:nil permissions:CBAttributePermissionsReadable];
-    
     
     // Then the service
-    CBMutableService *transferService = [[CBMutableService alloc] initWithType:[CBUUID UUIDWithString:COREMOTION_SERVICE_UUID]
-                                                                       primary:YES];
+    CBMutableService *transferService = [[CBMutableService alloc] initWithType:[CBUUID UUIDWithString:COREMOTION_SERVICE_UUID] primary:YES];
     
     // Add the characteristic to the service
     transferService.characteristics = @[self.matrixCharacteristic];
-    //    transferService.characteristics = @[self.matrixCharacteristic, self.rawCharacteristic];
     
     // And add it to the peripheral manager
     [self.peripheralManager addService:transferService];
-    
+    NSLog(@"Added rotation matrix service");
 }
 
 
@@ -94,9 +91,8 @@
 - (void)peripheralManager:(CBPeripheralManager *)peripheral central:(CBCentral *)central didSubscribeToCharacteristic:(CBCharacteristic *)characteristic
 {
     NSLog(@"Central subscribed to characteristic");
-    
+
     // Get the data
-    
     self.matrixToSend = self.rotationMatrixData;
     
 //    self.matrixToSend = [[NSString stringWithFormat:@"SENDING TEST DATA" ] dataUsingEncoding:NSUTF8StringEncoding];
@@ -106,7 +102,17 @@
     
     // Start sending
     [self sendMatrixData];
-    //    [self sendRawData];
+}
+
+
+- (void) updateMatrixData
+{
+    if( readyToUpdate == YES )
+    {
+        self.matrixToSend = self.rotationMatrixData;
+        self.sendDataIndex = 0;
+        [self sendMatrixData];
+    }
 }
 
 /** Recognise when the central unsubscribes
@@ -119,6 +125,7 @@
 
 - (void) sendMatrixData
 {
+    readyToUpdate = NO;
     
     // First up, check if we're meant to be sending an EOM
     static BOOL sendingMatrixEOM = NO;
@@ -126,14 +133,15 @@
     if (sendingMatrixEOM) {
         
         // send it
-        BOOL didSend = [self.peripheralManager updateValue:[@"EOM" dataUsingEncoding:NSUTF8StringEncoding] forCharacteristic:self.matrixCharacteristic onSubscribedCentrals:nil];
+        BOOL didSendEOM = [self.peripheralManager updateValue:[@"EOM" dataUsingEncoding:NSUTF8StringEncoding] forCharacteristic:self.matrixCharacteristic onSubscribedCentrals:nil];
         
         // Did it send?
-        if (didSend) {
+        if (didSendEOM) {
             
             // It did, so mark it as sent
             sendingMatrixEOM = NO;
             NSLog(@"Sent Matrix: EOM");
+            readyToUpdate = YES;
         }
         
         // It didn't send, so we'll exit and wait for peripheralManagerIsReadyToUpdateSubscribers to call sendData again
@@ -169,12 +177,12 @@
         
         // If it didn't work, drop out and wait for the callback
         if (!didSendMatrix) {
-            NSLog( @"HAS NOT SENT");
+//            NSLog( @"NOT YET SENT");
             return;
         }
         
         NSString *stringFromData = [[NSString alloc] initWithData:chunk encoding:NSUTF8StringEncoding];
-        NSLog(@"Sent: %@", stringFromData);
+//        NSLog(@"Sent: %@", stringFromData);
         
         // It did send, so update our index
         
@@ -196,6 +204,7 @@
                 sendingMatrixEOM = NO;
                 
                 NSLog(@"Sent: EOM");
+                readyToUpdate = YES;
             }
             
             return;
@@ -203,11 +212,6 @@
     }
 }
 
-- (void) sendRawData
-{
-    
-
-}
 
 /** This callback comes in when the PeripheralManager is ready to send the next chunk of data.
  *  This is to ensure that packets will arrive in the order they are sent
@@ -216,7 +220,6 @@
 {
     // Start sending again
     [self sendMatrixData];
-    //  [self sendRawData];
 }
 
 

@@ -317,13 +317,10 @@ const GLubyte Indices[] = {
              
              _coreMotionMatrix = baseModelViewMatrix;
              NSString *transmitMatrix = [NSString stringWithFormat:@"%f,%f,%f,%f,%f,%f,%f,%f,%f", r.m11, r.m21, r.m31, r.m12, r.m22, r.m32, r.m13, r.m23, r.m33 ];
-
-             self.peripheralController.rotationMatrixData = [transmitMatrix dataUsingEncoding:NSUTF8StringEncoding];
              
-//             if( [self.peripheralController.currentlySendingData boolValue] == NO && self.peripheralController.peripheralManager.state == CBPeripheralManagerStatePoweredOn )
-//             {
-//                 [self.peripheralController sendMatrixData];
-//             }
+             self.peripheralController.rotationMatrixData = [transmitMatrix dataUsingEncoding:NSUTF8StringEncoding];
+             [self.peripheralController updateMatrixData];
+
          }];
     }
     

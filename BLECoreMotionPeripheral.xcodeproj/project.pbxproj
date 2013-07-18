@@ -115,13 +115,13 @@
 		1E9B837F179753B3006A3680 /* BLECoreMotionPeripheral */ = {
 			isa = PBXGroup;
 			children = (
-				1E9B83A4179753F0006A3680 /* CoreMotionService.h */,
+				1E9B83B31797572F006A3680 /* NSDPeripheralModelController.h */,
+				1E9B83B41797572F006A3680 /* NSDPeripheralModelController.m */,
 				1E9B8388179753B3006A3680 /* NSDAppDelegate.h */,
 				1E9B8389179753B3006A3680 /* NSDAppDelegate.m */,
 				1E9B83A5179753FC006A3680 /* NSDGLK.h */,
 				1E9B83A6179753FC006A3680 /* NSDGLK.m */,
-				1E9B83B31797572F006A3680 /* NSDPeripheralModelController.h */,
-				1E9B83B41797572F006A3680 /* NSDPeripheralModelController.m */,
+				1E9B83A4179753F0006A3680 /* CoreMotionService.h */,
 				1E9B8396179753EA006A3680 /* tile_floor.png */,
 				1E9B8397179753EA006A3680 /* cubemap1.png */,
 				1E9B8398179753EA006A3680 /* cubemap2.png */,
@@ -303,10 +303,12 @@
 		1E9B8394179753B3006A3680 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "iPhone Developer: Michael Edgcumbe (W5KC692996)";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "BLECoreMotionPeripheral/BLECoreMotionPeripheral-Prefix.pch";
 				INFOPLIST_FILE = "BLECoreMotionPeripheral/BLECoreMotionPeripheral-Info.plist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "56C14CB2-2849-4D66-AB5D-EE0A69F216C5";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -314,10 +316,12 @@
 		1E9B8395179753B3006A3680 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "iPhone Developer: Michael Edgcumbe (W5KC692996)";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "BLECoreMotionPeripheral/BLECoreMotionPeripheral-Prefix.pch";
 				INFOPLIST_FILE = "BLECoreMotionPeripheral/BLECoreMotionPeripheral-Info.plist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "56C14CB2-2849-4D66-AB5D-EE0A69F216C5";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
@@ -341,6 +345,7 @@
 				1E9B8395179753B3006A3680 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
